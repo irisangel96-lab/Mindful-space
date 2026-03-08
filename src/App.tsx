@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, Pause, RotateCcw, Volume2, VolumeX, Upload, X, Music, Mic, MicOff } from 'lucide-react';
-import { ambientAudio } from './utils/audio';
 
 const SCRIPTS = [
   { progress: 0.0, text: "找一个舒服的坐姿，然后闭上眼睛..." },
@@ -42,8 +41,8 @@ export default function App() {
   const [currentScript, setCurrentScript] = useState(SCRIPTS[0].text);
   
   const [isTtsEnabled, setIsTtsEnabled] = useState(true);
-  const [customBgmUrl, setCustomBgmUrl] = useState<string | null>(null);
-  const [customBgmName, setCustomBgmName] = useState<string | null>(null);
+  const [customBgmUrl, setCustomBgmUrl] = useState<string | null>('/bgm.mp3');
+  const [customBgmName, setCustomBgmName] = useState<string | null>('默认背景音');
   
   const bgmRef = useRef<HTMLAudioElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -84,12 +83,10 @@ export default function App() {
   const toggleTimer = () => {
     if (!isActive) {
       if (!isMuted) {
-        if (customBgmUrl) bgmRef.current?.play();
-        else ambientAudio.play();
+        bgmRef.current?.play();
       }
     } else {
-      if (customBgmUrl) bgmRef.current?.pause();
-      else ambientAudio.stop();
+      bgmRef.current?.pause();
       window.speechSynthesis.cancel();
     }
     setIsActive(!isActive);
@@ -99,13 +96,9 @@ export default function App() {
     setIsActive(false);
     setTimeLeft(duration);
     setCurrentScript(SCRIPTS[0].text);
-    if (customBgmUrl) {
-      if (bgmRef.current) {
-        bgmRef.current.pause();
-        bgmRef.current.currentTime = 0;
-      }
-    } else {
-      ambientAudio.stop();
+    if (bgmRef.current) {
+      bgmRef.current.pause();
+      bgmRef.current.currentTime = 0;
     }
     window.speechSynthesis.cancel();
   };
@@ -115,24 +108,18 @@ export default function App() {
     setDuration(newDuration);
     setTimeLeft(newDuration);
     setCurrentScript(SCRIPTS[0].text);
-    if (customBgmUrl) {
-      if (bgmRef.current) {
-        bgmRef.current.pause();
-        bgmRef.current.currentTime = 0;
-      }
-    } else {
-      ambientAudio.stop();
+    if (bgmRef.current) {
+      bgmRef.current.pause();
+      bgmRef.current.currentTime = 0;
     }
     window.speechSynthesis.cancel();
   };
 
   const toggleMute = () => {
     if (isMuted && isActive) {
-      if (customBgmUrl) bgmRef.current?.play();
-      else ambientAudio.play();
+      bgmRef.current?.play();
     } else {
-      if (customBgmUrl) bgmRef.current?.pause();
-      else ambientAudio.stop();
+      bgmRef.current?.pause();
       window.speechSynthesis.cancel();
     }
     setIsMuted(!isMuted);
@@ -145,7 +132,6 @@ export default function App() {
       setCustomBgmUrl(url);
       setCustomBgmName(file.name);
       if (isActive && !isMuted) {
-        ambientAudio.stop();
         setTimeout(() => {
           bgmRef.current?.play();
         }, 100);
@@ -154,12 +140,13 @@ export default function App() {
   };
 
   const clearCustomBgm = () => {
-    if (customBgmUrl) URL.revokeObjectURL(customBgmUrl);
-    setCustomBgmUrl(null);
-    setCustomBgmName(null);
+    if (customBgmUrl && customBgmUrl !== '/bgm.mp3') URL.revokeObjectURL(customBgmUrl);
+    setCustomBgmUrl('/bgm.mp3');
+    setCustomBgmName('默认背景音');
     if (isActive && !isMuted) {
-      bgmRef.current?.pause();
-      ambientAudio.play();
+      setTimeout(() => {
+        bgmRef.current?.play();
+      }, 100);
     }
   };
 
@@ -302,3 +289,4 @@ export default function App() {
     </div>
   );
 }
+
